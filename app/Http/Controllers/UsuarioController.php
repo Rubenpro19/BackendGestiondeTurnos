@@ -59,7 +59,7 @@ class UsuarioController extends Controller
         ], 201);
     }
 
-    // Actualizar un usuario
+    // Actualizar un usuarios
     public function update(Request $request, $id)
     {
         $usuario = Usuario::find($id);

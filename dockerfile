@@ -1,25 +1,39 @@
-# Usar la imagen oficial de PHP con Apache
-FROM php:8.2-apache
+# Etapa 1: Construcción de dependencias
+FROM php:8.1-fpm AS build
 
-# Instalar extensiones necesarias para Laravel
+# Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
-    libpq-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     zip \
     unzip \
     git \
-    && docker-php-ext-install pdo pdo_pgsql
+    curl \
+    && docker-php-ext-install pdo pdo_mysql gd
 
 # Instalar Composer
-COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copiar archivos del proyecto
-COPY . /var/www/html
+# Copiar archivos de Laravel
+WORKDIR /var/www/html
+COPY . .
+
+# Instalar dependencias de Laravel
+RUN composer install --no-dev --optimize-autoloader
+
+# Etapa 2: Configuración de producción
+FROM nginx:1.21
+
+# Copiar configuración de Nginx
+COPY .docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copiar el código de Laravel desde la etapa de construcción
+COPY --from=build /var/www/html /var/www/html
 
 # Configurar permisos
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Habilitar mod_rewrite
-RUN a2enmod rewrite
-
-# Cambiar el directorio de trabajo
 WORKDIR /var/www/html
+
+CMD [ "/deploy.sh" ]

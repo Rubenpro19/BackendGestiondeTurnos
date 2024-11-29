@@ -27,9 +27,10 @@ class RolController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Rol $rol)
+    public function show(Rol $id)
     {
-        //
+        $rol = Rol::find($id);
+        return response()->json($rol);
     }
 
     /**

@@ -12,14 +12,14 @@ services:
       - laravel
 
   db:
-    image: postgres:15
+    image: postgres:16
     container_name: laravel_db
     ports:
-      - "5433:5433"
+      - "5432:5432"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Rubenmera190508
-      POSTGRES_DB: vamos
+      POSTGRES_USER: dbname_ykxx_user
+      POSTGRES_PASSWORD: zWI9HqheoevHi7imxS5rgpCzAZhnLQoQ
+      POSTGRES_DB: dbname_ykxx
     volumes:
       - dbdata:/var/lib/postgresql/data
     networks:

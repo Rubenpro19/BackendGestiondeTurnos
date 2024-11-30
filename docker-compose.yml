@@ -17,9 +17,9 @@ services:
     ports:
       - "5433:5433"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: tierrita24
-      POSTGRES_DB: vamos
+      POSTGRES_USER: postgretsql_nutricion_user
+      POSTGRES_PASSWORD: IB3gMESBLN0NKrqmSH3YDHQ4uwF1AUzM
+      POSTGRES_DB: postgretsql_nutricion
     volumes:
       - dbdata:/var/lib/postgresql/data
     networks:

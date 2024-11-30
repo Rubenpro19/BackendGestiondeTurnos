@@ -15,7 +15,7 @@ services:
     image: postgres:15
     container_name: laravel_db
     ports:
-      - "5433:5433"
+      - "5432:5432"
     environment:
       POSTGRES_USER: postgretsql_nutricion_user
       POSTGRES_PASSWORD: IB3gMESBLN0NKrqmSH3YDHQ4uwF1AUzM
@@ -40,8 +40,7 @@ services:
 
 networks:
   laravel:
-    external:
-      name: brige
+    driver: brige
 
 volumes:
   dbdata:

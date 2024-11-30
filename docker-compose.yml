@@ -40,6 +40,8 @@ services:
 
 networks:
   laravel:
+    external:
+      name: brige
 
 volumes:
   dbdata:

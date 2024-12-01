@@ -10,6 +10,8 @@ services:
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
       - laravel
+    ports:
+      - "10000:80"
 
   db:
     image: postgres:15

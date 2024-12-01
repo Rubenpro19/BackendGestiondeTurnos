@@ -25,7 +25,7 @@ RUN composer install --no-dev --optimize-autoloader
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 # Exponer el puerto
-EXPOSE 80
+EXPOSE 8080
 
 # Comando por defecto
 CMD ["php-fpm"]

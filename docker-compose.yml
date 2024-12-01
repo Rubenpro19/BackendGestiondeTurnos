@@ -17,9 +17,12 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: dbname_ykxx_user
-      POSTGRES_PASSWORD: zWI9HqheoevHi7imxS5rgpCzAZhnLQoQ
-      POSTGRES_DB: dbname_ykxx
+      DB_CONNECTION: pgsql
+      DB_HOST: dpg-ct5rot3qf0us7388lfb0-a
+      DB_PORT: 5432
+      DB_DATABASE: test_postgres_rtbf
+      DB_USERNAME: test_postgres_rtbf_user
+      DB_PASSWORD: omQMEQuKncMyPvaE2Oyr5SWpp7fq9n6v
     volumes:
       - dbdata:/var/lib/postgresql/data
     networks:

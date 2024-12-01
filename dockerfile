@@ -21,3 +21,9 @@ RUN composer install --no-dev --optimize-autoloader
 # Ajustar permisos
 RUN chmod -R 775 storage bootstrap/cache
 RUN chown -R www-data:www-data /var/www
+
+# Exponer el puerto 8080
+EXPOSE 8080
+
+# Iniciar PHP-FPM
+CMD ["php-fpm"]

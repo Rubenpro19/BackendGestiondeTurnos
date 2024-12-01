@@ -15,11 +15,11 @@ services:
     image: postgres:15
     container_name: laravel_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       DB_CONNECTION: pgsql
       DB_HOST: dpg-ct5n6pbqf0us7387vsmg-a
-      DB_PORT: 5432
+      DB_PORT: 5433
       DB_DATABASE: postgretsql_nutricion
       DB_USERNAME: postgretsql_nutricion_user
       DB_PASSWORD: IB3gMESBLN0NKrqmSH3YDHQ4uwF1AUzM

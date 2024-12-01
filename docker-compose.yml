@@ -27,6 +27,9 @@ services:
       - dbdata:/var/lib/postgresql/data
     networks:
       - laravel
+    dns:
+      8.8.8.8
+      8.8.4.4
 
   webserver:
     image: nginx:alpine

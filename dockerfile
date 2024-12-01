@@ -6,4 +6,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo_pgsql
 
 # Configurar cualquier otra dependencia necesaria
-EXPOSE 8080
+# Configurar PHP-FPM para escuchar en 0.0.0.0
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]
+# Exponer el puerto 10000
+EXPOSE 10000

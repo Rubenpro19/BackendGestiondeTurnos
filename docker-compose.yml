@@ -40,7 +40,6 @@ services:
 
 networks:
   laravel:
-    driver: brige
 
 volumes:
   dbdata:

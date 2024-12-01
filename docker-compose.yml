@@ -17,13 +17,19 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: postgretsql_nutricion_user
-      POSTGRES_PASSWORD: IB3gMESBLN0NKrqmSH3YDHQ4uwF1AUzM
-      POSTGRES_DB: postgretsql_nutricion
+      DB_CONNECTION: pgsql
+      DB_HOST: dpg-ct5n6pbqf0us7387vsmg-a
+      DB_PORT: 5432
+      DB_DATABASE: postgretsql_nutricion
+      DB_USERNAME: postgretsql_nutricion_user
+      DB_PASSWORD: IB3gMESBLN0NKrqmSH3YDHQ4uwF1AUzM
     volumes:
       - dbdata:/var/lib/postgresql/data
     networks:
       - laravel
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   webserver:
     image: nginx:alpine

@@ -6,9 +6,9 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && docker-php-ext-install pdo_pgsql
 
-<<<<<<< HEAD
+
 # Configurar cualquier otra dependencia necesaria
-=======
+
 # Instalar Composer
 COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 
@@ -25,9 +25,6 @@ RUN composer install --no-dev --optimize-autoloader
 RUN chmod -R 775 storage bootstrap/cache
 RUN chown -R www-data:www-data /var/www
 
-# Exponer el puerto 8080
-EXPOSE 8080
-
 # Iniciar PHP-FPM
 CMD ["php-fpm"]
->>>>>>> 0ba507948c4b097f00b5b4bc49859890878b85f6
+

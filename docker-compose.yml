@@ -17,7 +17,7 @@ services:
     image: postgres:15
     container_name: laravel_db
     ports:
-      - "5433:5432"
+      - "5432:5432"
     environment:
       DB_CONNECTION: pgsql
       DB_HOST: dpg-ct5n6pbqf0us7387vsmg-a

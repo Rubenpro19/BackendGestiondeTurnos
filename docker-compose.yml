@@ -16,22 +16,15 @@ services:
     image: postgres:15
     container_name: laravel_db
     ports:
-      - "5432:5432"
+      - "5433:5433"
     environment:
-      DB_CONNECTION: pgsql
-      DB_HOST: dpg-ct5rot3qf0us7388lfb0-a
-      DB_PORT: 5432
-      DB_DATABASE: test_postgres_rtbf
-      DB_USERNAME: test_postgres_rtbf_user
-      DB_PASSWORD: omQMEQuKncMyPvaE2Oyr5SWpp7fq9n6v
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Rubenmera190508
+      POSTGRES_DB: vamos
     volumes:
       - dbdata:/var/lib/postgresql/data
     networks:
       - laravel
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-
   webserver:
     image: nginx:alpine
     container_name: laravel_webserver
@@ -39,7 +32,7 @@ services:
       - .:/var/www
       - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     ports:
-      - "10000:10000"  # Cambiar el puerto expuesto
+      - "8080:80"  # Cambiar el puerto expuesto
     depends_on:
       - app
     networks:

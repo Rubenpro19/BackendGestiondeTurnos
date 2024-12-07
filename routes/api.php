@@ -17,8 +17,8 @@ Route::post('/logout', [UsuarioController::class, 'logout'])->middleware('auth:s
 
 // Rutas para UsuarioController
 Route::get('/user', [UsuarioController::class, 'index']); //Ver todos los usuario
-Route::post('/user', [UsuarioController::class, 'store']); //Ver usuario específico
-Route::get('/user/{id}', [UsuarioController::class, 'registro_unico']); //Crear un usuario
+Route::post('/user', [UsuarioController::class, 'store']); //crear usuario específico
+Route::get('/user/{id}', [UsuarioController::class, 'registro_unico']); //ver un usuario
 Route::put('/user/{id}', [UsuarioController::class, 'update']); //Actualiza un usuario
 Route::delete('/user/{id}', [UsuarioController::class, 'destroy']); //Borra un usuario
 
@@ -32,7 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/turnos', [TurnoController::class, 'index']);// Obtener todos los turnos
+ Route::get('/turnos', [TurnoController::class, 'index']);// Obtener todos los turnos
     Route::post('/turnos/reservar', [TurnoController::class, 'reservar']);// Reservar un turno
     Route::post('/turnos/crear', [TurnoController::class, 'store']);// Crear turnos automáticamente
     Route::get('/turnos/{id}', [TurnoController::class, 'show']);// Ver un turno específico

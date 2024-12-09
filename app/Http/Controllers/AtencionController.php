@@ -269,6 +269,17 @@ class AtencionController extends Controller
         ], 200);
     }
 
+    public function verificarAtencion(Request $request)
+    {
+        $turnoId = $request->query('turno_id');
+        $atencion = Atencion::where('turno_id', $turnoId)->first();
+
+        if ($atencion) {
+            return response()->json(['atencion' => $atencion], 200);
+        }
+
+        return response()->json(['atencion' => null], 404);
+    }
 
     /**
      * Remove the specified resource from storage.

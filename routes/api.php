@@ -11,8 +11,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-
-
 // Rutas para autenticación
 Route::post('/login', [UsuarioController::class, 'login']);
 Route::post('/logout', [UsuarioController::class, 'logout'])->middleware('auth:sanctum');

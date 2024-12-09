@@ -19,9 +19,6 @@ RUN usermod -u 1000 www-data && \
 # Definir directorio de trabajo
 WORKDIR /var/www
 
-# Configurar directorio de trabajo
-WORKDIR /var/www
-
 # Copiar el código fuente
 COPY . .
 

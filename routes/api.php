@@ -11,14 +11,16 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+
+
 // Rutas para autenticación
 Route::post('/login', [UsuarioController::class, 'login']);
 Route::post('/logout', [UsuarioController::class, 'logout'])->middleware('auth:sanctum');
 
 // Rutas para UsuarioController
 Route::get('/user', [UsuarioController::class, 'index']); //Ver todos los usuario
-Route::post('/user', [UsuarioController::class, 'store']); //Ver usuario específico
-Route::get('/user/{id}', [UsuarioController::class, 'registro_unico']); //Crear un usuario
+Route::post('/user', [UsuarioController::class, 'store']); //Crear un usuario
+Route::get('/user/{id}', [UsuarioController::class, 'registro_unico']); //Ver usuario específico
 Route::put('/user/{id}', [UsuarioController::class, 'update']); //Actualiza un usuario
 Route::delete('/user/{id}', [UsuarioController::class, 'destroy']); //Borra un usuario
 

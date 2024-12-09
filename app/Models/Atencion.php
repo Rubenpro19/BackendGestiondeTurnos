@@ -18,8 +18,6 @@ class Atencion extends Model
      */
     protected $fillable = [
         'turno_id',
-       /*  'edad',
-        'sexo', */
         'altura',
         'peso',
         'cintura',

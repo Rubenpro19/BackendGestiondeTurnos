@@ -19,9 +19,9 @@ Route::post('/logout', [UsuarioController::class, 'logout'])->middleware('auth:s
 Route::middleware('auth:sanctum')->get('/user', [UsuarioController::class, 'obtenerUsuarios']);
 Route::middleware('auth:sanctum')->put('/user/{id}', [UsuarioController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('/user/{id}', [UsuarioController::class, 'destroy']);
+Route::middleware('auth:sanctum')->get('/user/{id}', [UsuarioController::class, 'registro_unico']);
 
-Route::post('/user', [UsuarioController::class, 'store']); //Ver usuario específico
-Route::get('/user/{id}', [UsuarioController::class, 'registro_unico']); //Crear un usuario
+Route::post('/user', [UsuarioController::class, 'store']); //Crear Usuario
 Route::get('/nutricionistas', [UsuarioController::class, 'obtenerNutricionistas']);
 Route::get('/turnos/filtrar-por-nutricionista', [TurnoController::class, 'filtrarPorNutricionista']);
 

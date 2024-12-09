@@ -46,12 +46,23 @@ class DatabaseSeeder extends Seeder
             'descripcion' => 'Turno cancelado.',
         ]);
 
-        $this->call(UsuarioSeeder::class);
+        Usuario::factory()->create([
+            'rol_id'=> '1',
+            'nombre'=> 'admin',
+            'email'=> 'admin@admin.com',
+            'password'=> bcrypt('admin')
+        ]);
 
-        Usuario::factory()->create([ 
+        Usuario::factory()->create([
             'rol_id'=> '2',
             'nombre'=> 'dayana',
             'email'=> 'daya@daya.com',
+            'password'=> bcrypt('tierrita24')
+        ]);
+        Usuario::factory()->create([
+            'rol_id'=> '2',
+            'nombre'=> 'Alexander',
+            'email'=> 'ale@ale.com',
             'password'=> bcrypt('tierrita24')
         ]);
 
@@ -63,10 +74,5 @@ class DatabaseSeeder extends Seeder
         ]);
 
 
-        // Creacion de Usuario, DatosPersonales y de Turnos de prueba
-        $this->call([
-            DatoPersonalSeeder::class,
-            TurnoSeeder::class,
-        ]);
     }
 }

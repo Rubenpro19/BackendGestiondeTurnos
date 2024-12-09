@@ -23,6 +23,17 @@ Route::post('/user', [UsuarioController::class, 'store']); //Crear un usuario
 Route::get('/user/{id}', [UsuarioController::class, 'registro_unico']); //Ver usuario específico
 Route::put('/user/{id}', [UsuarioController::class, 'update']); //Actualiza un usuario
 Route::delete('/user/{id}', [UsuarioController::class, 'destroy']); //Borra un usuario
+// Rutas para UsuarioController protegidas exclusivas para el admin
+Route::middleware('auth:sanctum')->get('/user', [UsuarioController::class, 'obtenerUsuarios']);
+Route::middleware('auth:sanctum')->put('/user/{id}', [UsuarioController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('/user/{id}', [UsuarioController::class, 'destroy']);
+
+
+Route::post('/user', [UsuarioController::class, 'store']); //Ver usuario específico
+Route::get('/user/{id}', [UsuarioController::class, 'registro_unico']); //Crear un usuario
+Route::get('/nutricionistas', [UsuarioController::class, 'obtenerNutricionistas']);
+Route::get('/turnos/filtrar-por-nutricionista', [TurnoController::class, 'filtrarPorNutricionista']);
+
 
 // Rutas para DatoPersonalController
 Route::middleware('auth:sanctum')->group(function () {

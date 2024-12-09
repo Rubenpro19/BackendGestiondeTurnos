@@ -18,68 +18,111 @@ class TurnoController extends Controller
 
     // Reservar turno
     public function reservar(Request $request)
-    {
-        $usuario = Auth::user();
-        if (!$usuario) {
-            return response()->json(["message" => "Usuario no encontrado"], 404);
+{
+    $usuario = Auth::user();
+    if (!$usuario) {
+        return response()->json(["message" => "Usuario no encontrado"], 404);
+    }
+
+    DB::beginTransaction(); // Iniciar la transacción
+
+    try {
+        $turno = Turno::find($request->turno_id);
+
+        if (!$turno) {
+            return response()->json(["message" => "Turno no encontrado"], 404);
         }
 
-        DB::beginTransaction(); // Iniciar la transacción
+        // Verificar si el usuario ya tiene un turno reservado en la misma fecha
+        $existeTurnoEnMismaFecha = Turno::where('fecha', $turno->fecha)
+            ->where('paciente_id', $usuario->id)
+            ->where('estado_id', 3) // 3 = reservado
+            ->exists();
 
-        try {
-            $turno = Turno::find($request->turno_id);
+        if ($existeTurnoEnMismaFecha) {
+            return response()->json(["message" => "Ya tienes un turno reservado en esta fecha."], 400);
+        }
 
-            // Verificar que el turno esté libre antes de reservarlo.
-            if ($turno && $turno->estado_id == 1) { // 1 = libre
-                $turno->update([
-                    'estado_id' => 3, // 3 = reservado
-                    'paciente_id' => $usuario->id, // Asignar el ID del usuario actual
+        // Verificar que el turno esté libre antes de reservarlo
+        if ($turno->estado_id == 1) { // 1 = libre
+            $turno->update([
+                'estado_id' => 3, // 3 = reservado
+                'paciente_id' => $usuario->id, // Asignar el ID del usuario actual
+            ]);
+
+            DB::commit(); // Confirmar la transacción
+
+            return response()->json([
+                "turno" => $turno,
+                "message" => "Turno reservado con éxito"
+            ], 200);
+        } else {
+            DB::rollBack(); // Revertir la transacción si el turno no está disponible
+            return response()->json(["message" => "Turno no disponible"], 400);
+        }
+    } catch (\Exception $e) {
+        DB::rollBack(); // Revertir la transacción en caso de error
+        return response()->json(["message" => "Ocurrió un error al reservar el turno"], 500);
+    }
+}
+
+public function filtrarPorNutricionista(Request $request)
+{
+    // Validar que el nutricionista_id esté presente
+    $request->validate([
+        'nutricionista_id' => 'required|exists:usuario,id', // Asegúrate de que exista en la tabla de usuarios
+    ]);
+
+    $nutricionistaId = $request->input('nutricionista_id');
+
+    // Obtener los turnos filtrados por nutricionista
+    $turnos = Turno::with('paciente', 'nutricionista', 'estado')
+        ->where('nutricionista_id', $nutricionistaId)
+        ->get();
+
+    if ($turnos->isEmpty()) {
+        return response()->json(["message" => "No hay turnos disponibles para este nutricionista"], 404);
+    }
+
+    return response()->json($turnos, 200);
+}
+
+
+public function store()
+{
+    // Verificar que el usuario autenticado es un nutricionista
+    $nutricionista = Auth::user();
+
+    if (!$nutricionista || $nutricionista->rol_id !== 2) { // Ajustar la condición según tu implementación de roles
+        return response()->json(["message" => "Acceso no autorizado"], 403);
+    }
+
+    $diasSemana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    $horarios = [
+        'matutino' => ['08:00', '09:00', '10:00', '11:00'],
+        'vespertino' => ['14:00', '15:00', '16:00', '17:00']
+    ];
+
+    $fechaActual = now(); // Fecha actual para empezar la creación
+
+    foreach ($diasSemana as $indice => $dia) {
+        $fechaTurno = $fechaActual->copy()->addDays($indice); // Fecha del turno incrementada por día
+
+        foreach ($horarios as $bloque) {
+            foreach ($bloque as $hora) {
+                Turno::create([
+                    'dia' => $dia,
+                    'fecha' => $fechaTurno->toDateString(), // Fecha específica del turno
+                    'hora' => $hora,
+                    'estado_id' => 1, // 1 = libre
+                    'nutricionista_id' => $nutricionista->id // ID del nutricionista autenticado
                 ]);
-
-                DB::commit(); // Confirmar la transacción
-
-                return response()->json([
-                    "turno" => $turno,
-                    "message" => "Turno reservado con éxito"
-                ], 200);
-            } else {
-                DB::rollBack(); // Revertir la transacción si el turno no está disponible
-                return response()->json(["message" => "Turno no disponible"], 400);
             }
-        } catch (\Exception $e) {
-            DB::rollBack(); // Revertir la transacción en caso de error
-            return response()->json(["message" => "Ocurrió un error al reservar el turno"], 500);
         }
     }
 
-    public function store()
-    {
-        $diasSemana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-        $horarios = [
-            'matutino' => ['08:00', '09:00', '10:00', '11:00'],
-            'vespertino' => ['14:00', '15:00', '16:00', '17:00']
-        ];
-
-        $fechaActual = now(); // Fecha actual para empezar la creación
-
-        foreach ($diasSemana as $indice => $dia) {
-            $fechaTurno = $fechaActual->copy()->addDays($indice); // Fecha del turno incrementada por día
-
-            foreach ($horarios as $bloque) {
-                foreach ($bloque as $hora) {
-                    Turno::create([
-                        'dia' => $dia,
-                        'fecha' => $fechaTurno->toDateString(), // Fecha específica del turno
-                        'hora' => $hora,
-                        'estado_id' => 1, // 1 = libre
-                        'nutricionista_id' => 11 // ID del nutricionista (ajustar si es necesario)
-                    ]);
-                }
-            }
-        }
-
-        return response()->json(["message" => "Turnos creados con éxito"], 201);
-    }
+    return response()->json(["message" => "Turnos creados con éxito"], 201);
+}
 
 
     public function show($id)

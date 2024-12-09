@@ -15,12 +15,15 @@ Route::get('/', function () {
 Route::post('/login', [UsuarioController::class, 'login']);
 Route::post('/logout', [UsuarioController::class, 'logout'])->middleware('auth:sanctum');
 
-// Rutas para UsuarioController
-Route::get('/user', [UsuarioController::class, 'index']); //Ver todos los usuario
-Route::post('/user', [UsuarioController::class, 'store']); //crear usuario específico
-Route::get('/user/{id}', [UsuarioController::class, 'registro_unico']); //ver un usuario
-Route::put('/user/{id}', [UsuarioController::class, 'update']); //Actualiza un usuario
-Route::delete('/user/{id}', [UsuarioController::class, 'destroy']); //Borra un usuario
+// Rutas para UsuarioController protegidas exclusivas para el admin
+Route::middleware('auth:sanctum')->get('/user', [UsuarioController::class, 'obtenerUsuarios']);
+Route::middleware('auth:sanctum')->put('/user/{id}', [UsuarioController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('/user/{id}', [UsuarioController::class, 'destroy']);
+Route::middleware('auth:sanctum')->get('/user/{id}', [UsuarioController::class, 'registro_unico']);
+
+Route::post('/user', [UsuarioController::class, 'store']); //Crear Usuario
+Route::get('/nutricionistas', [UsuarioController::class, 'obtenerNutricionistas']);
+Route::get('/turnos/filtrar-por-nutricionista', [TurnoController::class, 'filtrarPorNutricionista']);
 
 // Rutas para DatoPersonalController
 Route::middleware('auth:sanctum')->group(function () {
@@ -32,7 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
- Route::get('/turnos', [TurnoController::class, 'index']);// Obtener todos los turnos
+    Route::get('/turnos', [TurnoController::class, 'index']);// Obtener todos los turnos
     Route::post('/turnos/reservar', [TurnoController::class, 'reservar']);// Reservar un turno
     Route::post('/turnos/crear', [TurnoController::class, 'store']);// Crear turnos automáticamente
     Route::get('/turnos/{id}', [TurnoController::class, 'show']);// Ver un turno específico

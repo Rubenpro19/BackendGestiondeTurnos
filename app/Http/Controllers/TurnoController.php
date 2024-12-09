@@ -1,12 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use App\Models\Turno;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
+use Carbon\Carbon;
 class TurnoController extends Controller
 {
     public function index()
@@ -29,8 +28,22 @@ class TurnoController extends Controller
         try {
             $turno = Turno::find($request->turno_id);
 
-            // Verificar que el turno esté libre antes de reservarlo.
-            if ($turno && $turno->estado_id == 1) { // 1 = libre
+            if (!$turno) {
+                return response()->json(["message" => "Turno no encontrado"], 404);
+            }
+
+            // Verificar si el usuario ya tiene un turno reservado en la misma fecha
+            $existeTurnoEnMismaFecha = Turno::where('fecha', $turno->fecha)
+                ->where('paciente_id', $usuario->id)
+                ->where('estado_id', 3) // 3 = reservado
+                ->exists();
+
+            if ($existeTurnoEnMismaFecha) {
+                return response()->json(["message" => "Ya tienes un turno reservado en esta fecha."], 400);
+            }
+
+            // Verificar que el turno esté libre antes de reservarlo
+            if ($turno->estado_id == 1) { // 1 = libre
                 $turno->update([
                     'estado_id' => 3, // 3 = reservado
                     'paciente_id' => $usuario->id, // Asignar el ID del usuario actual
@@ -52,54 +65,73 @@ class TurnoController extends Controller
         }
     }
 
-/*     public function store()
+
+
+    public function turnosReservados(Request $request)
     {
-        $diasSemana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-        $horarios = [
-            'matutino' => ['08:00', '09:00', '10:00', '11:00'],
-            'vespertino' => ['14:00', '15:00', '16:00', '17:00']
-        ];
+        // Validar que el usuario autenticado sea nutricionista
+        $usuario = Auth::user();
 
-        $fechaActual = now(); // Fecha actual para empezar la creación
-
-        foreach ($diasSemana as $indice => $dia) {
-            $fechaTurno = $fechaActual->copy()->addDays($indice); // Fecha del turno incrementada por día
-
-            foreach ($horarios as $bloque) {
-                foreach ($bloque as $hora) {
-                    Turno::create([
-                        'dia' => $dia,
-                        'fecha' => $fechaTurno->toDateString(), // Fecha específica del turno
-                        'hora' => $hora,
-                        'estado_id' => 1, // 1 = libre
-                        'nutricionista_id' => 11 // ID del nutricionista (ajustar si es necesario)
-                    ]);
-                }
-            }
+        if (!$usuario || $usuario->rol_id !== 2) { // 2 = nutricionista
+            return response()->json(["message" => "Acceso no autorizado"], 403);
         }
 
-        return response()->json(["message" => "Turnos creados con éxito"], 201);
-    } */
+        // Obtener los turnos reservados del nutricionista
+        $turnos = Turno::with('paciente') // Relación con paciente
+            ->where('nutricionista_id', $usuario->id) // Turnos asignados al nutricionista autenticado
+            ->where('estado_id', 3) // 3 = reservado
+            ->get();
+
+        // Validar si no hay turnos
+        if ($turnos->isEmpty()) {
+            return response()->json(["message" => "No hay turnos reservados"], 200);
+        }
+
+        return response()->json($turnos, 200);
+    }
+
+    public function filtrarPorNutricionista(Request $request)
+    {
+        // Validar que el nutricionista_id esté presente
+        $request->validate([
+            'nutricionista_id' => 'required|exists:usuario,id', // Asegúrate de que exista en la tabla de usuarios
+        ]);
+
+        $nutricionistaId = $request->input('nutricionista_id');
+
+        // Obtener los turnos filtrados por nutricionista
+        $turnos = Turno::with('paciente', 'nutricionista', 'estado')
+            ->where('nutricionista_id', $nutricionistaId)
+            ->get();
+
+        if ($turnos->isEmpty()) {
+            return response()->json(["message" => "No hay turnos disponibles para este nutricionista"], 404);
+        }
+
+        return response()->json($turnos, 200);
+    }
+
+
     public function store()
     {
         // Verificar que el usuario autenticado es un nutricionista
         $nutricionista = Auth::user();
-    
+
         if (!$nutricionista || $nutricionista->rol_id !== 2) { // Ajustar la condición según tu implementación de roles
             return response()->json(["message" => "Acceso no autorizado"], 403);
         }
-    
+
         $diasSemana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
         $horarios = [
             'matutino' => ['08:00', '09:00', '10:00', '11:00'],
             'vespertino' => ['14:00', '15:00', '16:00', '17:00']
         ];
-    
+
         $fechaActual = now(); // Fecha actual para empezar la creación
-    
+
         foreach ($diasSemana as $indice => $dia) {
             $fechaTurno = $fechaActual->copy()->addDays($indice); // Fecha del turno incrementada por día
-    
+
             foreach ($horarios as $bloque) {
                 foreach ($bloque as $hora) {
                     Turno::create([
@@ -112,10 +144,9 @@ class TurnoController extends Controller
                 }
             }
         }
-    
+
         return response()->json(["message" => "Turnos creados con éxito"], 201);
     }
-    
 
 
     public function show($id)
@@ -165,9 +196,9 @@ class TurnoController extends Controller
         if ($turno->estado_id == 3 && $turno->paciente_id == Auth::id()) {
             $nuevoTurno = Turno::find($request->nuevo_turno_id);
 
-            if ($nuevoTurno && $nuevoTurno->estado_id == 1) { // 1 = si el turno esta libre libre
+            if ($nuevoTurno && $nuevoTurno->estado_id == 1) { // 1 = libre
                 $turno->update(['estado_id' => 1, 'paciente_id' => null]); // liberar turno anterior
-                $nuevoTurno->update(['estado_id' => 3, 'paciente_id' => Auth::id()]); // y luego se reserva el nuevo turno
+                $nuevoTurno->update(['estado_id' => 3, 'paciente_id' => Auth::id()]); // reservar nuevo turno
 
                 return response()->json(["message" => "Turno actualizado con éxito"], 200);
             } else {

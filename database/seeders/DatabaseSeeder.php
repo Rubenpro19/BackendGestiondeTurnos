@@ -55,13 +55,13 @@ class DatabaseSeeder extends Seeder
 
         Usuario::factory()->create([
             'rol_id'=> '2',
-            'nombre'=> 'dayana',
+            'nombre'=> 'Dayana Moreira',
             'email'=> 'daya@daya.com',
             'password'=> bcrypt('1234')
         ]);
         Usuario::factory()->create([
             'rol_id'=> '2',
-            'nombre'=> 'Alexander',
+            'nombre'=> 'Alexander Bravo',
             'email'=> 'ale@ale.com',
             'password'=> bcrypt('1234')
         ]);
@@ -70,7 +70,7 @@ class DatabaseSeeder extends Seeder
             'rol_id'=> 3,
             'nombre'=> "Ruben Mera",
             'email' => "dariomera911@gmail.com",
-            'password' => bcrypt('Rubenmera190508'),
+            'password' => bcrypt('1234'),
         ]);
 
 

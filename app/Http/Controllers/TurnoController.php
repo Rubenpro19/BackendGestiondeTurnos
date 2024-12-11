@@ -18,135 +18,165 @@ class TurnoController extends Controller
     // Reservar turno
     public function reservar(Request $request)
     {
-        $usuario = Auth::user();
-        if (!$usuario) {
-            return response()->json(["message" => "Usuario no encontrado"], 404);
-        }
-
-        DB::beginTransaction(); // Iniciar la transacción
-
-        try {
-            $turno = Turno::find($request->turno_id);
-
-            if (!$turno) {
-                return response()->json(["message" => "Turno no encontrado"], 404);
-            }
-
-            // Verificar si el usuario ya tiene un turno reservado en la misma fecha
-            $existeTurnoEnMismaFecha = Turno::where('fecha', $turno->fecha)
-                ->where('paciente_id', $usuario->id)
-                ->where('estado_id', 3) // 3 = reservado
-                ->exists();
-
-            if ($existeTurnoEnMismaFecha) {
-                return response()->json(["message" => "Ya tienes un turno reservado en esta fecha."], 400);
-            }
-
-            // Verificar que el turno esté libre antes de reservarlo
-            if ($turno->estado_id == 1) { // 1 = libre
-                $turno->update([
-                    'estado_id' => 3, // 3 = reservado
-                    'paciente_id' => $usuario->id, // Asignar el ID del usuario actual
-                ]);
-
-                DB::commit(); // Confirmar la transacción
-
-                return response()->json([
-                    "turno" => $turno,
-                    "message" => "Turno reservado con éxito"
-                ], 200);
-            } else {
-                DB::rollBack(); // Revertir la transacción si el turno no está disponible
-                return response()->json(["message" => "Turno no disponible"], 400);
-            }
-        } catch (\Exception $e) {
-            DB::rollBack(); // Revertir la transacción en caso de error
-            return response()->json(["message" => "Ocurrió un error al reservar el turno"], 500);
-        }
+    $usuario = Auth::user();
+    if (!$usuario) {
+        return response()->json(["message" => "Usuario no encontrado"], 404);
     }
 
+    DB::beginTransaction(); // Iniciar la transacción
 
+    try {
+        $turno = Turno::find($request->turno_id);
 
-    public function turnosReservados(Request $request)
-    {
-        // Validar que el usuario autenticado sea nutricionista
-        $usuario = Auth::user();
-
-        if (!$usuario || $usuario->rol_id !== 2) { // 2 = nutricionista
-            return response()->json(["message" => "Acceso no autorizado"], 403);
+        if (!$turno) {
+            return response()->json(["message" => "Turno no encontrado"], 404);
         }
 
-        // Obtener los turnos reservados del nutricionista
-        $turnos = Turno::with('paciente') // Relación con paciente
-            ->where('nutricionista_id', $usuario->id) // Turnos asignados al nutricionista autenticado
+        // Verificar si el usuario ya tiene un turno reservado en la misma fecha
+        $existeTurnoEnMismaFecha = Turno::where('fecha', $turno->fecha)
+            ->where('paciente_id', $usuario->id)
             ->where('estado_id', 3) // 3 = reservado
-            ->get();
+            ->exists();
 
-        // Validar si no hay turnos
-        if ($turnos->isEmpty()) {
-            return response()->json(["message" => "No hay turnos reservados"], 200);
+        if ($existeTurnoEnMismaFecha) {
+            return response()->json(["message" => "Ya tienes un turno reservado en esta fecha."], 400);
         }
 
-        return response()->json($turnos, 200);
+        // Verificar que el turno esté libre antes de reservarlo
+        if ($turno->estado_id == 1) { // 1 = libre
+            $turno->update([
+                'estado_id' => 3, // 3 = reservado
+                'paciente_id' => $usuario->id, // Asignar el ID del usuario actual
+            ]);
+
+            DB::commit(); // Confirmar la transacción
+
+            return response()->json([
+                "turno" => $turno,
+                "message" => "Turno reservado con éxito"
+            ], 200);
+        } else {
+            DB::rollBack(); // Revertir la transacción si el turno no está disponible
+            return response()->json(["message" => "Turno no disponible"], 400);
+        }
+    } catch (\Exception $e) {
+        DB::rollBack(); // Revertir la transacción en caso de error
+        return response()->json(["message" => "Ocurrió un error al reservar el turno"], 500);
+    }
+}
+
+
+
+public function turnosReservados(Request $request)
+{
+    // Validar que el usuario autenticado sea nutricionista
+    $usuario = Auth::user();
+
+    if (!$usuario || $usuario->rol_id !== 2) { // 2 = nutricionista
+        return response()->json(["message" => "Acceso no autorizado"], 403);
     }
 
-    public function filtrarPorNutricionista(Request $request)
-    {
-        // Validar que el nutricionista_id esté presente
-        $request->validate([
-            'nutricionista_id' => 'required|exists:usuario,id', // Asegúrate de que exista en la tabla de usuarios
+    // Obtener los turnos reservados del nutricionista
+    $turnos = Turno::with('paciente') // Relación con paciente
+        ->where('nutricionista_id', $usuario->id) // Turnos asignados al nutricionista autenticado
+        ->where('estado_id', 3) // 3 = reservado
+        ->get();
+
+    // Validar si no hay turnos
+    if ($turnos->isEmpty()) {
+        return response()->json(["message" => "No hay turnos reservados"], 200);
+    }
+
+    return response()->json($turnos, 200);
+}
+
+public function filtrarTurnosPorNutricionista(Request $request, $nutricionistaId)
+{
+    $usuario = Auth::user();
+
+    if (!$usuario) {
+        return response()->json(["message" => "Usuario no autenticado"], 401);
+    }
+
+    try {
+        // Turnos disponibles para este nutricionista y que no estén reservados
+        $turnosDisponibles = Turno::where('nutricionista_id', $nutricionistaId)
+            ->where('estado_id', 1) // 1 = libre
+            ->get();
+
+        // Turnos reservados por el usuario
+        $turnosReservados = Turno::where('nutricionista_id', $nutricionistaId)
+            ->where('estado_id', 3) // 3 = reservado
+            ->where('paciente_id', $usuario->id)
+            ->get();
+
+        return response()->json([
+            "disponibles" => $turnosDisponibles,
+            "reservados" => $turnosReservados,
         ]);
+    } catch (\Exception $e) {
+        return response()->json(["message" => "Error al cargar turnos"], 500);
+    }
+}
 
-        $nutricionistaId = $request->input('nutricionista_id');
 
-        // Obtener los turnos filtrados por nutricionista
-        $turnos = Turno::with('paciente', 'nutricionista', 'estado')
-            ->where('nutricionista_id', $nutricionistaId)
-            ->get();
+public function filtrarPorNutricionista(Request $request)
+{
+    // Validar que el nutricionista_id esté presente
+    $request->validate([
+        'nutricionista_id' => 'required|exists:usuario,id', // Asegúrate de que exista en la tabla de usuarios
+    ]);
 
-        if ($turnos->isEmpty()) {
-            return response()->json(["message" => "No hay turnos disponibles para este nutricionista"], 404);
-        }
+    $nutricionistaId = $request->input('nutricionista_id');
 
-        return response()->json($turnos, 200);
+    // Obtener los turnos filtrados por nutricionista
+    $turnos = Turno::with('paciente', 'nutricionista', 'estado')
+        ->where('nutricionista_id', $nutricionistaId)
+        ->get();
+
+    if ($turnos->isEmpty()) {
+        return response()->json(["message" => "No hay turnos disponibles para este nutricionista"], 404);
     }
 
+    return response()->json($turnos, 200);
+}
 
-    public function store()
-    {
-        // Verificar que el usuario autenticado es un nutricionista
-        $nutricionista = Auth::user();
 
-        if (!$nutricionista || $nutricionista->rol_id !== 2) { // Ajustar la condición según tu implementación de roles
-            return response()->json(["message" => "Acceso no autorizado"], 403);
-        }
+public function store()
+{
+    // Verificar que el usuario autenticado es un nutricionista
+    $nutricionista = Auth::user();
 
-        $diasSemana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-        $horarios = [
-            'matutino' => ['08:00', '09:00', '10:00', '11:00'],
-            'vespertino' => ['14:00', '15:00', '16:00', '17:00']
-        ];
+    if (!$nutricionista || $nutricionista->rol_id !== 2) { // Ajustar la condición según tu implementación de roles
+        return response()->json(["message" => "Acceso no autorizado"], 403);
+    }
 
-        $fechaActual = now(); // Fecha actual para empezar la creación
+    $diasSemana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    $horarios = [
+        'matutino' => ['08:00', '09:00', '10:00', '11:00'],
+        'vespertino' => ['14:00', '15:00', '16:00', '17:00']
+    ];
 
-        foreach ($diasSemana as $indice => $dia) {
-            $fechaTurno = $fechaActual->copy()->addDays($indice); // Fecha del turno incrementada por día
+    $fechaActual = now(); // Fecha actual para empezar la creación
 
-            foreach ($horarios as $bloque) {
-                foreach ($bloque as $hora) {
-                    Turno::create([
-                        'dia' => $dia,
-                        'fecha' => $fechaTurno->toDateString(), // Fecha específica del turno
-                        'hora' => $hora,
-                        'estado_id' => 1, // 1 = libre
-                        'nutricionista_id' => $nutricionista->id // ID del nutricionista autenticado
-                    ]);
-                }
+    foreach ($diasSemana as $indice => $dia) {
+        $fechaTurno = $fechaActual->copy()->addDays($indice); // Fecha del turno incrementada por día
+
+        foreach ($horarios as $bloque) {
+            foreach ($bloque as $hora) {
+                Turno::create([
+                    'dia' => $dia,
+                    'fecha' => $fechaTurno->toDateString(), // Fecha específica del turno
+                    'hora' => $hora,
+                    'estado_id' => 1, // 1 = libre
+                    'nutricionista_id' => $nutricionista->id // ID del nutricionista autenticado
+                ]);
             }
         }
-
-        return response()->json(["message" => "Turnos creados con éxito"], 201);
     }
+
+    return response()->json(["message" => "Turnos creados con éxito"], 201);
+}
 
 
     public function show($id)
@@ -162,7 +192,7 @@ class TurnoController extends Controller
             return response()->json(["message" => "Turno no encontrado"], 404);
         }
 
-        if ($turno->estado_id == 3) { // 3 = reservado
+        if ($turno->estado_id == 3 || $turno->estado_id == 2 ) { // 3 = reservado
             return response()->json([
                 'id' => $turno->id,
                 'fecha' => $turno->fecha,

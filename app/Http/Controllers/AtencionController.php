@@ -10,61 +10,49 @@ use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+
 class AtencionController extends Controller
 {
     public function index()
-    {
-        $usuario = Auth::user(); // Obtener el usuario autenticado
+{
+    $usuario = Auth::user(); // Obtener el usuario autenticado
 
-        if (!$usuario) {
-            return response()->json(['message' => 'Usuario no autenticado'], 401);
-        }
+    if (!$usuario) {
+        return response()->json(['message' => 'Usuario no autenticado'], 401);
+    }
 
-        // Determinar las atenciones según el rol del usuario
-        if ($usuario->rol_id == 3) { // Paciente
-            $atenciones = Atencion::whereHas('turno', function ($query) use ($usuario) {
+    // Determinar las atenciones según el rol del usuario
+    if ($usuario->rol_id == 3) { // Paciente
+        $atenciones = Atencion::with('turno.paciente') // Incluye turno y paciente
+            ->whereHas('turno', function ($query) use ($usuario) {
                 $query->where('paciente_id', $usuario->id);
-            })->get();
+            })
+            ->get();
 
-            return response()->json([
-                'message' => 'Atenciones disponibles para el paciente:',
-                'atencion' => $atenciones
-            ], 200);
-        } elseif ($usuario->rol_id == 2) { // Nutricionista
-            $atenciones = Atencion::whereHas('turno', function ($query) use ($usuario) {
-                $query->where('nutricionista_id', $usuario->id);
-            })->get();
-
-            return response()->json([
-                'message' => 'Todas las atenciones realizadas por el nutricionista:',
-                'atencion' => $atenciones
-            ], 200);
-        }
-
-        // Caso de rol no reconocido
         return response()->json([
-            'message' => 'Rol no reconocido o no tiene atenciones disponibles',
-            'atencion' => []
-        ], 403);
+            'message' => 'Atenciones disponibles para el paciente:',
+            'atencion' => $atenciones
+        ], 200);
+    } elseif ($usuario->rol_id == 2) { // Nutricionista
+        $atenciones = Atencion::with('turno.paciente') // Incluye turno y paciente
+            ->whereHas('turno', function ($query) use ($usuario) {
+                $query->where('nutricionista_id', $usuario->id);
+            })
+            ->get();
+
+        return response()->json([
+            'message' => 'Todas las atenciones realizadas por el nutricionista:',
+            'atencion' => $atenciones
+        ], 200);
     }
 
-    public function show($id)
-    {
-        $atencion = Atencion::find($id);
+    // Caso de rol no reconocido
+    return response()->json([
+        'message' => 'Rol no reconocido o no tiene atenciones disponibles',
+        'atencion' => []
+    ], 403);
+}
 
-        if (!$atencion) {
-            return response()->json(['message' => 'Atención no encontrada'], 404);
-        }
-
-        $usuario = Auth::user();
-
-        // Verificar el acceso según el rol
-        if ($usuario->rol === 'Paciente' && $atencion->turno->paciente_id !== $usuario->id) {
-            return response()->json(['message' => 'Acceso denegado'], 403);
-        }
-
-        return response()->json($atencion);
-    }
 
     public function crearStore(Request $request)
     {
@@ -91,6 +79,16 @@ class AtencionController extends Controller
         // Si hay errores de validación, retornar con los errores
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Verificar si ya existe una atención para el turno
+        $atencionExistente = Atencion::where('turno_id', $request->turno_id)->first();
+
+        if ($atencionExistente) {
+            return response()->json([
+                'message' => 'Ya existe una atención para este turno. Solo se puede actualizar.',
+                'atencion' => $atencionExistente,
+            ], 409); // Código 409: Conflicto
         }
 
         // Verificar que el turno exista y obtener el paciente asociado
@@ -157,6 +155,11 @@ class AtencionController extends Controller
 
         // Guardar la atención en la base de datos
         $atencion->save();
+
+        // Actualizar estado del turno a "terminado"
+        $turno->estado_id = 2;
+        $turno->save();
+
 
         return response()->json([
             'message' => 'Atención creada con éxito para el paciente',
@@ -262,7 +265,10 @@ class AtencionController extends Controller
 
         // Guardar los cambios en la base de datos
         $atencion->save();
-
+        if ($atencion->wasChanged()) {
+            $turno->estado_id = 2;
+            $turno->save();
+        }
         return response()->json([
             'message' => 'Atención actualizada con éxito',
             'atencion' => $atencion,
@@ -306,5 +312,4 @@ class AtencionController extends Controller
 
         return response()->json(['message' => 'Atención eliminada con éxito'], 200);
     }
-
 }

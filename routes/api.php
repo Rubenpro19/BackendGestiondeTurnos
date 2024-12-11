@@ -19,11 +19,19 @@ Route::post('/logout', [UsuarioController::class, 'logout'])->middleware('auth:s
 Route::middleware('auth:sanctum')->get('/user', [UsuarioController::class, 'obtenerUsuarios']);
 Route::middleware('auth:sanctum')->put('/user/{id}', [UsuarioController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('/user/{id}', [UsuarioController::class, 'destroy']);
-Route::middleware('auth:sanctum')->get('/user/{id}', [UsuarioController::class, 'registro_unico']);
 
-Route::post('/user', [UsuarioController::class, 'store']); //Crear Usuario
+Route::middleware('auth:sanctum')->get('/turnos/paciente', [TurnoController::class, 'turnosReservadosDelPaciente']);
+
+
+
+
+
+Route::post('/user', [UsuarioController::class, 'store']); //Ver usuario específico
+Route::get('/user/{id}', [UsuarioController::class, 'registro_unico']); //Crear un usuario
 Route::get('/nutricionistas', [UsuarioController::class, 'obtenerNutricionistas']);
-Route::get('/turnos/filtrar-por-nutricionista', [TurnoController::class, 'filtrarPorNutricionista']);
+Route::get('/turnos/nutricionista/{nutricionistaId}', [TurnoController::class, 'filtrarTurnosPorNutricionista']);
+
+
 
 // Rutas para DatoPersonalController
 Route::middleware('auth:sanctum')->group(function () {
@@ -32,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/datos-personales/{id}', [DatoPersonalController::class, 'show']);
     Route::put('/datos-personales', [DatoPersonalController::class, 'update']);
     Route::delete('/datos-personales', [DatoPersonalController::class, 'destroy']);
+    Route::get('/turnos/reservados', [TurnoController::class, 'turnosReservados']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -41,6 +50,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/turnos/{id}', [TurnoController::class, 'show']);// Ver un turno específico
     Route::put('/turnos/{id}', [TurnoController::class, 'update']);// Actualizar un turno reservado
     Route::delete('/turnos/{id}', [TurnoController::class, 'destroy']);// Cancelar un turno reservado
+    Route::get('/turnos/nutricionista/{nutricionistaId}', [TurnoController::class, 'filtrarTurnosPorNutricionista']);
+    
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -48,6 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/atenciones/{id}', [AtencionController::class, 'show']); // Para ver una atención específica
     Route::put('/atenciones/{id}', [AtencionController::class, 'actualizar']);//actualiza una atecion ya hecha por el nutricionista
     Route::delete('/atenciones/{id}', [AtencionController::class, 'eliminar']);//elimina una atencion hecha por el paciente
-    Route::post('/atenciones', [AtencionController::class, 'crearStore']);//crear un atencion del nutricionista  a  el paciente ligado al turno
+    Route::post('/atenciones', [AtencionController::class, 'crearStore']); // Crear atención
 });
+
 

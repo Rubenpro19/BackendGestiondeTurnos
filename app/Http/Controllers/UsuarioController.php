@@ -14,21 +14,21 @@ class UsuarioController extends Controller
     public function obtenerUsuarios()
     {
         $admin = Auth::user(); // Obtiene al usuario autenticado (administrador)
-    
+
         // Verificar si hay un usuario autenticado
         if (!$admin) {
             return response()->json(['message' => 'No autenticado'], 401);
         }
-    
+
         // Obtener todos los usuarios excepto el admin
         $usuarios = Usuario::where('id', '!=', $admin->id)
             ->whereIn('rol_id', [2, 3]) // Solo nutricionistas (rol_id = 2) y pacientes (rol_id = 3)
             ->select('id', 'nombre', 'email', 'rol_id')
             ->get();
-    
+
         return response()->json($usuarios);
     }
-    
+
 
 
     // Obtener todos los nutricionistas
@@ -124,20 +124,25 @@ class UsuarioController extends Controller
         ]);
 
         return response()->json(['message' => 'Usuario actualizado correctamente', 'usuario' => $usuario]);
-}
+    }
 
 
     // Eliminar un usuario
     public function destroy($id)
     {
         $usuario = Usuario::find($id);
-        $admin = Auth::user(); // Obtiene el administrador autenticado
+        $admin = Auth::user(); // Obtiene el usuario autenticado
+
+        // Verifica si el usuario autenticado es administrador
+        if ($admin->rol_id !== 1) { // Asegúrate de que "rol" esté relacionado correctamente
+            return response()->json(['message' => 'No tienes permisos para realizar esta acción'], 403);
+        }
 
         if (!$usuario) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
 
-        // No permitir que el admin se elimine a sí mismo
+        // No permitir que el administrador se elimine a sí mismo
         if ($usuario->id === $admin->id) {
             return response()->json(['message' => 'No puedes eliminarte a ti mismo'], 403);
         }
@@ -150,26 +155,26 @@ class UsuarioController extends Controller
 
     // Login de usuario
     public function login(Request $request)
-{
-    $credentials = $request->only('email', 'password');
-    if (Auth::attempt($credentials)) {
-        $usuario = Auth::user(); // Obtiene el usuario autenticado
-        $token = $usuario->createToken('API TOKEN')->plainTextToken;
+    {
+        $credentials = $request->only('email', 'password');
+        if (Auth::attempt($credentials)) {
+            $usuario = Auth::user(); // Obtiene el usuario autenticado
+            $token = $usuario->createToken('API TOKEN')->plainTextToken;
 
-        return response()->json([
-            'message' => 'Inicio de sesión exitoso',
-            'user' => [
-                'id' => $usuario->id,
-                'nombre' => $usuario->nombre,
-                'email' => $usuario->email,
-                'rol_id' => $usuario->rol_id, // Incluye el rol
-            ],
-            'token' => $token,
-        ], 200);
+            return response()->json([
+                'message' => 'Inicio de sesión exitoso',
+                'user' => [
+                    'id' => $usuario->id,
+                    'nombre' => $usuario->nombre,
+                    'email' => $usuario->email,
+                    'rol_id' => $usuario->rol_id, // Incluye el rol
+                ],
+                'token' => $token,
+            ], 200);
+        }
+
+        return response()->json(['message' => 'Credenciales incorrectas'], 401);
     }
-
-    return response()->json(['message' => 'Credenciales incorrectas'], 401);
-}
 
 
     // Logout del usuario

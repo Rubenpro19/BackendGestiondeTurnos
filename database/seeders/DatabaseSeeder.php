@@ -46,31 +46,31 @@ class DatabaseSeeder extends Seeder
             'descripcion' => 'Turno cancelado.',
         ]);
 
-        Usuario::factory()->create([ 
+        Usuario::factory()->create([
             'rol_id'=> '1',
             'nombre'=> 'admin',
             'email'=> 'admin@admin.com',
             'password'=> bcrypt('admin')
         ]);
 
-        Usuario::factory()->create([ 
+        Usuario::factory()->create([
             'rol_id'=> '2',
-            'nombre'=> 'dayana',
+            'nombre'=> 'Dayana Moreira',
             'email'=> 'daya@daya.com',
-            'password'=> bcrypt('tierrita24')
+            'password'=> bcrypt('1234')
         ]);
-        Usuario::factory()->create([ 
+        Usuario::factory()->create([
             'rol_id'=> '2',
-            'nombre'=> 'Alexander',
+            'nombre'=> 'Alexander Bravo',
             'email'=> 'ale@ale.com',
-            'password'=> bcrypt('tierrita24')
+            'password'=> bcrypt('1234')
         ]);
 
         Usuario::factory()->create([
             'rol_id'=> 3,
             'nombre'=> "Ruben Mera",
             'email' => "dariomera911@gmail.com",
-            'password' => bcrypt('Rubenmera190508'),
+            'password' => bcrypt('1234'),
         ]);
 
 

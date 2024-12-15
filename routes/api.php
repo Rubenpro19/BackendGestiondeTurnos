@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TurnoController;
 
 Route::get('/', function () {
-    return view('index');
+    return view('welcome');
 });
 
 // Rutas para autenticación

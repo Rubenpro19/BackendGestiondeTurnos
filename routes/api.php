@@ -16,7 +16,7 @@ Route::post('/login', [UsuarioController::class, 'login']);
 Route::post('/logout', [UsuarioController::class, 'logout'])->middleware('auth:sanctum');
 
 // Rutas para UsuarioController protegidas exclusivas para el admin
-Route::get('/user', [UsuarioController::class, 'obtenerUsuarios']);
+Route::middleware('auth:sanctum')->get('/user', [UsuarioController::class, 'obtenerUsuarios']);
 Route::middleware('auth:sanctum')->put('/user/{id}', [UsuarioController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('/user/{id}', [UsuarioController::class, 'destroy']);
 

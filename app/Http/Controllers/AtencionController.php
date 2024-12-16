@@ -167,6 +167,35 @@ class AtencionController extends Controller
         ], 201);
     }
 
+    public function show($id)
+{
+    $usuario = Auth::user();
+
+    // Validar que el usuario esté autenticado
+    if (!$usuario) {
+        return response()->json(['message' => 'Usuario no autenticado'], 401);
+    }
+
+    // Buscar la atención por ID
+    $atencion = Atencion::with('turno.paciente')->find($id);
+
+    if (!$atencion) {
+        return response()->json(['message' => 'Atención no encontrada'], 404);
+    }
+
+    // Validar que el usuario tiene acceso a la atención según su rol
+    if ($usuario->rol_id == 3 && $atencion->turno->paciente_id !== $usuario->id) {
+        return response()->json(['message' => 'Acceso denegado a esta atención'], 403);
+    }
+
+    if ($usuario->rol_id == 2 && $atencion->turno->nutricionista_id !== $usuario->id) {
+        return response()->json(['message' => 'Acceso denegado a esta atención'], 403);
+    }
+
+    return response()->json($atencion, 200);
+}
+
+
 
     public function actualizar(Request $request, $id)
     {
